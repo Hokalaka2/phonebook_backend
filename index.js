@@ -1,7 +1,17 @@
 const express = require('express')
+var morgan = require('morgan')
 const app = express()
 
-const notes = [
+morgan.token('post-body', function (req, res) { 
+  return JSON.stringify(req.body)
+});
+
+app.use(express.json())
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-body'))
+
+
+
+let persons = [
     { 
         "id": 1,
         "name": "Arto Hellas", 
@@ -25,7 +35,74 @@ const notes = [
 ]
 
 app.get('/api/persons', (request, response) => {
-    response.json(notes)
+    response.json(persons)
+})
+
+
+app.get('/info', (request, response) => {
+  const phonebookInfo = `<p>Phonebook has info for ${persons.length} people </p>`
+  
+  const timeInfo = new Date()
+  console.log(timeInfo)
+  response.send(`<div>${phonebookInfo} <p>${timeInfo} </p></div>`)
+})
+
+app.get('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id)
+  const person = persons.find(person => person.id === id)
+
+  if(person) {
+    response.json(person)
+  }
+  else{
+    response.status(404).end()
+  }
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id)
+  persons = persons.filter(person => person.id !== id)
+
+  response.status(204).end
+})
+
+const generateId = () => {
+  const id = Math.floor(Math.random() * 1000)
+  return id
+}
+
+//create new note
+app.post('/api/persons', (request, response) => {
+ 
+  const body = request.body
+  if(!body.number) {
+    return response.status(400).json({
+      error: 'number missing'
+    })
+  }
+
+  if(!body.name) {
+    return response.status(400).json({
+      error: 'name missing'
+    })
+  }
+
+  if(persons.find(person => person.name === body.name)){
+    return response.status(400).json({
+      error: 'name not unique'
+    })
+  }
+
+  const person = {
+    name: body.name,
+    number: body.number,
+    date: new Date(),
+    id: generateId(),
+  }
+
+  persons = persons.concat(person)
+
+  response.json(person)
 })
 
 const PORT = 3001

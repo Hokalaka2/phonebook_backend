@@ -1,0 +1,8 @@
+POST http://localhost:3001/api/persons/ HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Otis Mil",
+    "number": "999999999",
+    "date": "Wed, 21 Oct 2015 18:27:50 GMT"
+}
